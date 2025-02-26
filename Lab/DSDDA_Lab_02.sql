@@ -1,129 +1,168 @@
--- Type creation
-CREATE TYPE Emp_t
+DSDDA LAB SHEET 02
+__________________
+
+-- (a) Write Oracle OR-SQL statements to develop the above database schema. 
+-- Create types
+create type dept_t
 /
 
-CREATE TYPE Dept_t AS OBJECT (
-    deptno NUMBER(4),
-    deptname VARCHAR2(12),
-    MGR REF Emp_t   -- Reference to an employee
+create type emp_t as object (
+eno number(4),
+ename varchar(15),
+edept REF dept_t,
+salary number(8, 2)
 )
 /
 
-CREATE OR REPLACE TYPE Emp_t AS OBJECT (
-    empno NUMBER(4),
-    empname VARCHAR2(15),
-    EDEPT REF Dept_t,  -- Reference to a department
-    Salary NUMBER(8,2)
-) 
-/
-
-CREATE TYPE Proj_t AS OBJECT (
-    prono NUMBER(4),
-    proname VARCHAR2(15),
-    PDEPT REF Dept_t,   -- Reference to a department
-    budget NUMBER(10,2)
+create or replace type dept_t as object (
+dno number(2),
+dname varchar2(12),
+mgr REF emp_t
 )
 /
 
--- Table creation
-CREATE TABLE Dept OF Dept_t (
-    PRIMARY KEY (deptno)
+create type proj_t as object (
+pno number(4),
+pname varchar2(15),
+pdept REF dept_t,
+budget number(10, 2)
 )
 /
 
-CREATE TABLE Emp OF Emp_t (
-    PRIMARY KEY (empno),
-    EDEPT REFERENCES Dept
+-- Create table
+create table Dept of dept_t (
+dno primary key
 )
 /
 
-ALTER TABLE Dept ADD CONSTRAINT fk_mgr FOREIGN KEY (MGR) REFERENCES Emp
-/
-
-CREATE TABLE Proj OF Proj_t (
-    PRIMARY KEY (prono),
-    PDEPT REFERENCES Dept
+create table Emp of emp_t (
+eno primary key,
+edept references Dept
 )
 /
 
--- Verify Table Structure
-DESCRIBE Emp
-/ 
-DESCRIBE Dept
-/  
-DESCRIBE Proj
+ALTER TABLE Dept 
+ADD CONSTRAINT fk_mgr FOREIGN KEY (mgr) REFERENCES Emp;
 /
 
--- Insert Departments
-INSERT INTO Dept VALUES (
-    Dept_t(10, 'IT', NULL)
-)
-/
-INSERT INTO Dept VALUES (
-    Dept_t(20, 'Finance', NULL)
-)
-/
-INSERT INTO Dept VALUES (
-    Dept_t(30, 'HR', NULL)
+create table Proj of proj_t (
+pno primary key,
+pdept references Dept
 )
 /
 
--- Insert Employees (Assuming we set managers later)
-INSERT INTO Emp VALUES (
-    Emp_t(101, 'Kamal Perera', NULL, 120000.00)
-)
+-- (b) Insert sample data to Emp, Dept and Proj tables in the above schema.
+
+INSERT INTO Emp values (emp_t(1, 'Saman', NULL, 30000))
 /
-INSERT INTO Emp VALUES (
-    Emp_t(102, 'Nimal Silva', NULL, 110000.00)
-)
+INSERT INTO Emp values (emp_t(2, 'Kamal', NULL, 34000))
 /
-INSERT INTO Emp VALUES (
-    Emp_t(103, 'Sunil Fernando', NULL, 115000.00)
-)
+INSERT INTO Emp values (emp_t(3, 'Nimal', NULL, 40000))
+/
+INSERT INTO Emp values (emp_t(4, 'Viraj', NULL, 50000))
 /
 
--- Update Managers (Assigning references)
-UPDATE Dept d
-SET d.MGR = (SELECT REF(e) FROM Emp e WHERE e.empno = 101)
-WHERE d.deptno = 10
+INSERT INTO Dept VALUES (dept_t(1, 'DS',
+(SELECT ref(e) FROM Emp e WHERE e.eno = 1)))
 /
-
-UPDATE Dept d
-SET d.MGR = (SELECT REF(e) FROM Emp e WHERE e.empno = 102)
-WHERE d.deptno = 20
+INSERT INTO Dept VALUES (dept_t(2, 'IT', 
+(SELECT ref(e) FROM Emp e WHERE e.eno = 2)))
 /
-
-UPDATE Dept d
-SET d.MGR = (SELECT REF(e) FROM Emp e WHERE e.empno = 103)
-WHERE d.deptno = 30
-/
-
--- Update Employees to assign departments
-UPDATE Emp e
-SET e.EDEPT = (SELECT REF(d) FROM Dept d WHERE d.deptno = 10)
-WHERE e.empno = 101
+INSERT INTO Dept VALUES (dept_t(3, 'SE', 
+(SELECT ref(e) FROM Emp e WHERE e.eno = 3)))
 /
 
 UPDATE Emp e
-SET e.EDEPT = (SELECT REF(d) FROM Dept d WHERE d.deptno = 20)
-WHERE e.empno = 102
+SET e.edept = (SELECT ref(d) FROM Dept d WHERE d.dno = 1)
+WHERE e.eno = 1
 /
-
 UPDATE Emp e
-SET e.EDEPT = (SELECT REF(d) FROM Dept d WHERE d.deptno = 30)
-WHERE e.empno = 103
+SET e.edept = (SELECT ref(d) FROM Dept d WHERE d.dno = 2)
+WHERE e.eno = 2
+/
+UPDATE Emp e
+SET e.edept = (SELECT ref(d) FROM Dept d WHERE d.dno = 3)
+WHERE e.eno = 3
+/
+UPDATE Emp e
+SET e.edept = (SELECT ref(d) FROM Dept d WHERE d.dno = 3)
+WHERE e.eno = 4
 /
 
--- Insert Projects
-INSERT INTO Proj VALUES (
-    Proj_t(201, 'ERP System', (SELECT REF(d) FROM Dept d WHERE d.deptno = 10), 5000000.00)
-)
+INSERT INTO Proj VALUES (proj_t(1, 'A', 
+(SELECT ref(d) FROM Dept d WHERE d.dno = 1), 
+52000))
 /
-INSERT INTO Proj VALUES (
-    Proj_t(202, 'Audit', (SELECT REF(d) FROM Dept d WHERE d.deptno = 20), 2000000.00)
-)
+INSERT INTO Proj VALUES (proj_t(2, 'B', 
+(SELECT ref(d) FROM Dept d WHERE d.dno = 2), 
+43000))
 /
-INSERT INTO Proj VALUES (
-    Proj_t(203, 'Training Program', (SELECT REF(d) FROM Dept d WHERE d.deptno = 30), 1500000.00)
-)
+INSERT INTO Proj VALUES (proj_t(3, 'C', 
+(SELECT ref(d) FROM Dept d WHERE d.dno = 3), 
+50000))
+/
+INSERT INTO Proj VALUES (proj_t(4, 'D', 
+(SELECT ref(d) FROM Dept d WHERE d.dno = 3), 
+75000))
+/
+INSERT INTO Proj VALUES (proj_t(5, 'E', 
+(SELECT ref(d) FROM Dept d WHERE d.dno = 2), 
+65000))
+/
+
+-- (c) Find the name and salary of managers of all departments. Display the department number, manager name and salary. 
+
+SELECT d.mgr.ename as Manager name, d.mgr.salary as Salary
+FROM Dept d
+/
+
+SELECT d.mgr.ename as Manager_name, d.mgr.salary as Salary
+FROM Dept d
+/
+
+-- (d) For projects that have budgets over $50000, get the project name, and the name of the manager of the department in charge of the project.
+
+SELECT p.pname, p.pdept.mgr.ename Manager_name
+FROM Proj p
+WHERE p.budget > 50000
+/
+
+-- (e) For departments that are in charge of projects, find the department number, department name and total budget of all its projects together.
+
+SELECT p.pdept.dno dept_number, p.pdept.dname dept_name, SUM(p.budget) Total_budget
+FROM Proj p
+GROUP BY p.pdept.dno, p.pdept.dname
+/
+
+-- (f) Find the manager’s name who is controlling the project with the largest budget
+
+SELECT p.pdept.mgr.ename Manager_name
+FROM Proj p
+WHERE p.budget >= (
+			SELECT MAX(p.budget)
+			FROM Proj p
+		  )
+/
+
+-- (g) Find the managers who control budget above $60,000. (Hint: The total amount a manager control is the sum of budgets of all projects belonging to the dept(s) for which the he/she is managing). Print the manager’s employee number and the total controlling budget.
+
+SELECT p.pdept.mgr.eno manager_no, SUM(p.budget) total_budget
+FROM Proj p
+GROUP BY p.pdept.mgr.eno
+HAVING SUM(p.budget) > 60000
+/
+
+-- (h) Find the manager who controls the largest amount. Print the manager’s employee number and the total controlling budget.
+
+SELECT p.pdept.mgr.eno manager_number, SUM(p.budget) total_budget
+FROM Proj p
+GROUP BY p.pdept.mgr.eno
+HAVING SUM(p.budget) >= (
+			  SELECT MAX(total)
+			  FROM (
+				SELECT SUM(p1.budget) as total
+				FROM Proj p1
+				GROUP BY p1.pdept.mgr.eno 
+				)
+			)
 /
