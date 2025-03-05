@@ -2,10 +2,10 @@
 * TYPE CREATION
 */
 CREATE TYPE depend_t AS OBJECT (
-depname varchar2(12),
-gender char(1),
-bdate date,
-relationship varchar2(10)
+  depname varchar2(12),
+  gender char(1),
+  bdate date,
+  relationship varchar2(10)
 )
 /
 
@@ -16,34 +16,34 @@ CREATE TYPE dept_t
 /
 
 CREATE TYPE emp_t AS OBJECT (
-eno number(4),
-ename varchar2(15),
-edept REF dept_t,
-salary number(8,2),
-dependents dependTB_t
+  eno number(4),
+  ename varchar2(15),
+  edept REF dept_t,
+  salary number(8,2),
+  dependents dependTB_t
 )
 /
 
 CREATE OR REPLACE TYPE dept_t AS OBJECT (
-dno number(2),
-dname varchar2(12),
-mgr REF emp_t
+  dno number(2),
+  dname varchar2(12),
+  mgr REF emp_t
 )
 /
 
 CREATE TYPE proj_t AS OBJECT (
-pno number(4),
-pname varchar2(15),
-pdept REF dept_t,
-budget number(10,2)
+  pno number(4),
+  pname varchar2(15),
+  pdept REF dept_t,
+  budget number(10,2)
 )
 /
 
 CREATE TYPE work_t AS OBJECT (
-wemp REF emp_t,
-wproj REF proj_t,
-since date,
-hours number(4,2)
+  wemp REF emp_t,
+  wproj REF proj_t,
+  since date,
+  hours number(4,2)
 )
 /
 
@@ -51,13 +51,13 @@ hours number(4,2)
 * TABLE CREATION
 */
 CREATE TABLE Dept of dept_t (
-dno PRIMARY KEY
+  dno PRIMARY KEY
 )
 /
 
 CREATE TABLE Emp OF emp_t (
-eno PRIMARY KEY,
-edept REFERENCES Dept
+  eno PRIMARY KEY,
+  edept REFERENCES Dept
 )
 NESTED TABLE dependents STORE AS dependent_tb
 /
@@ -67,14 +67,14 @@ ADD CONSTRAINT fk_mgr FOREIGN KEY (mgr) REFERENCES Emp
 /
 
 CREATE TABLE Proj OF proj_t (
-pno PRIMARY KEY,
-pdept REFERENCES Dept
+  pno PRIMARY KEY,
+  pdept REFERENCES Dept
 )
 /
 
 CREATE TABLE Works of work_t (
-wemp REFERENCES Emp,
-wproj REFERENCES Proj
+  wemp REFERENCES Emp,
+  wproj REFERENCES Proj
 )
 /
 
@@ -188,31 +188,127 @@ INSERT INTO Works VALUES (work_t(
 TO_DATE('2025-01-31', 'YYYY-MM-DD'), 06.15))
 /
 
+-- (a) Add a member method to compute the child allowance payable to employees with dependent children. The allowance is calculated at the rate of 5% of salary for each dependent child. Write Oracle SQL statements to modify the object type emp_t.
+ALTER TYPE emp_t 
+ADD MEMBER FUNCTION childAllowancePay 
+RETURN NUMBER
+CASCADE;
+
+CREATE TYPE BODY emp_t AS
+  MEMBER FUNCTION childAllowancePay RETURN NUMBER IS
+    CHILD_COUNT NUMBER := 0;
+    ALLOWANCE NUMBER := 0;
+  BEGIN
+    SELECT COUNT(*) INTO CHILD_COUNT
+    FROM TABLE(SELF.dependents)
+    WHERE relationship = 'CHILD';
+
+    ALLOWANCE := CHILD_COUNT * 0.05 * SELF.salary;
+
+    RETURN ALLOWANCE;
+  END childAllowancePay;
+END;
+/
+
+CREATE OR REPLACE TYPE BODY emp_t AS 
+    MEMBER FUNCTION childAllowancePay RETURN NUMBER IS
+        CHILD_COUNT NUMBER := 0;
+        ALLOWANCE NUMBER := 0;
+    BEGIN
+        IF SELF.dependents IS NOT EMPTY THEN
+            SELECT COUNT(*) INTO CHILD_COUNT
+            FROM TABLE(SELF.dependents)
+            WHERE UPPER(relationship) = 'CHILD';
+        END IF;
+
+        ALLOWANCE := CHILD_COUNT * 0.05 * SELF.salary;
+
+        RETURN ALLOWANCE;
+    END childAllowancePay;
+END;
+/
+
+
+-- (b) Using the method defined above, write an Oracle SQL statement to display the employee name, salary and the child allowance payable for all eligible employees.
+SELECT e.ename, e.salary, e.childAllowancePay() AS Child_Allowance
+FROM Emp e
+WHERE e.childAllowancePay() > 0
+/
+
+/*
+SELECT e.ename, e.salary, e.childAllowancePay() AS Child_Allowance
+FROM Emp e
+WHERE e.eno = any (
+                SELECT e.eno
+                FROM Emp e, TABLE(e.dependents) d
+                WHERE d.relationship = 'CHILD' 
+                )
+/
+*/
+
+-- (c) Write an SQL statement to insert a dependent child for the employee whose eno is 2143. The name of the child is Jeremy gender ‘M’, and the date of birth 12 March 2001. 
+INSERT INTO TABLE (
+    SELECT e.dependents 
+    FROM Emp e 
+    WHERE e.eno = 2
+) 
+VALUES (depend_t('Jeremy', 'M', TO_DATE('2001-03-12', 'YYYY-MM-DD'), 'CHILD'))
+/
+
+-- (d) Assuming the same object relational schema as above, write a method to compute the bonus amount of employees, assuming that it is to be calculated by multiplying the salary with a rate percentage given as a parameter.
+ALTER TYPE emp_t
+ADD MEMBER FUNCTION bonusPay(rate NUMBER) RETURN NUMBER
+CASCADE;
+
+CREATE OR REPLACE TYPE BODY emp_t AS
+    MEMBER FUNCTION childAllowancePay RETURN NUMBER IS
+        CHILD_COUNT NUMBER := 0;
+        ALLOWANCE NUMBER := 0;
+    BEGIN
+        IF SELF.dependents IS NOT EMPTY THEN
+            SELECT COUNT(*) INTO CHILD_COUNT
+            FROM TABLE(SELF.dependents)
+            WHERE UPPER(relationship) = 'CHILD';
+        END IF;
+
+        ALLOWANCE := CHILD_COUNT * 0.05 * SELF.salary;
+
+        RETURN ALLOWANCE;
+    END childAllowancePay;
+
+    MEMBER FUNCTION bonusPay(rate IN NUMBER) RETURN NUMBER IS
+        BONUS NUMBER := 0;
+    BEGIN
+        BONUS := SELF.salary * (rate/100);
+
+        RETURN BONUS;
+    END bonusPay;
+END;
+/
+
+-- (e) All employees in the department named ‘Data Mining’ are to be given a bonus at the rate of 12%. Write an SQL statement to display the name of each eligible employee and the bonus, using the method for computing bonus that was declared above. 
+SELECT w.wemp.ename AS Employee_name, w.wemp.bonusPay(12) AS Bonus_payment
+FROM Works w
+WHERE w.wemp.edept.dname = 'IT'
+/
 
 
 /*
 * DROP TABLES AND TYPES
 */
--- Drop tables
-DROP TABLE Emp FORCE
-/
-DROP TABLE Dept FORCE
-/
-DROP TABLE Proj FORCE
-/
-DROP TABLE Work FORCE
-/
+-- CONSTRAINT DROP
+ALTER TABLE Dept DROP CONSTRAINT fk_mgr;
 
--- Drop types
-DROP TYPE depend_t FORCE
-/
-DROP TYPE dependTB_t FORCE
-/
-DROP TYPE emp_t FORCE
-/
-DROP TYPE dept_t FORCE
-/
-DROP TYPE proj_t FORCE
-/
-DROP TYPE work_t FORCE
-/
+-- TABLE DROP
+DROP TABLE Works;
+DROP TABLE Proj;
+DROP TABLE Emp;
+DROP TABLE Dept;
+
+-- TYPE DROP
+DROP TYPE work_t;
+DROP TYPE proj_t;
+DROP TYPE emp_t FORCE;
+DROP TYPE dept_t FORCE;
+DROP TYPE dependTB_t FORCE;
+DROP TYPE depend_t FORCE;
