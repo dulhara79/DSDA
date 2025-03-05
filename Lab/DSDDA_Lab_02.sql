@@ -166,3 +166,21 @@ HAVING SUM(p.budget) >= (
 				)
 			)
 /
+
+/*
+* Drop tables and types
+*/
+-- Drop tables
+drop table Emp force
+/
+drop table Dept force
+/
+drop table Proj force
+/
+-- Drop types
+drop type emp_t force
+/
+drop type dept_t force
+/
+drop type proj_t force
+/
