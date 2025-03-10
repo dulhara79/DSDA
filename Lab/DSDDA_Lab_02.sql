@@ -1,57 +1,54 @@
-DSDDA LAB SHEET 02
-__________________
-
--- (a) Write Oracle OR-SQL statements to develop the above database schema. 
--- Create types
-create type dept_t
+-- (a) Write ORacle OR-SQL statements to develop the above databASe schema. 
+-- Create TYPEs
+CREATE TYPE dept_t
 /
 
-create type emp_t as object (
-eno number(4),
+CREATE TYPE emp_t AS OBJECT (
+eno NUMBER(4),
 ename varchar(15),
 edept REF dept_t,
-salary number(8, 2)
+salary NUMBER(8, 2)
 )
 /
 
-create or replace type dept_t as object (
-dno number(2),
-dname varchar2(12),
+CREATE OR REPLACE TYPE dept_t AS OBJECT (
+dno NUMBER(2),
+dname VARCHAR2(12),
 mgr REF emp_t
 )
 /
 
-create type proj_t as object (
-pno number(4),
-pname varchar2(15),
+CREATE TYPE proj_t AS OBJECT (
+pno NUMBER(4),
+pname VARCHAR2(15),
 pdept REF dept_t,
-budget number(10, 2)
+budget NUMBER(10, 2)
 )
 /
 
--- Create table
-create table Dept of dept_t (
-dno primary key
+-- Create TABLE
+CREATE TABLE Dept of dept_t (
+dno PRIMARY KEY
 )
 /
 
-create table Emp of emp_t (
-eno primary key,
-edept references Dept
+CREATE TABLE Emp of emp_t (
+eno PRIMARY KEY,
+edept REFERENCES Dept
 )
 /
 
 ALTER TABLE Dept 
-ADD CONSTRAINT fk_mgr FOREIGN KEY (mgr) REFERENCES Emp;
+ADD CONSTRAINT fk_mgr FOREIGN KEY (mgr) REFERENCES Emp
 /
 
-create table Proj of proj_t (
-pno primary key,
-pdept references Dept
+CREATE TABLE Proj of proj_t (
+pno PRIMARY KEY,
+pdept REFERENCES Dept
 )
 /
 
--- (b) Insert sample data to Emp, Dept and Proj tables in the above schema.
+-- (b) Insert sample data to Emp, Dept and Proj TABLEs in the above schema.
 
 INSERT INTO Emp values (emp_t(1, 'Saman', NULL, 30000))
 /
@@ -110,26 +107,26 @@ INSERT INTO Proj VALUES (proj_t(5, 'E',
 65000))
 /
 
--- (c) Find the name and salary of managers of all departments. Display the department number, manager name and salary. 
+-- (c) Find the name and salary of managers of all departments. Display the department NUMBER, manager name and salary. 
 
-SELECT d.mgr.ename as Manager name, d.mgr.salary as Salary
+SELECT d.mgr.ename AS Manager name, d.mgr.salary AS Salary
 FROM Dept d
 /
 
-SELECT d.mgr.ename as Manager_name, d.mgr.salary as Salary
+SELECT d.mgr.ename AS Manager_name, d.mgr.salary AS Salary
 FROM Dept d
 /
 
--- (d) For projects that have budgets over $50000, get the project name, and the name of the manager of the department in charge of the project.
+-- (d) FOR projects that have budgets over $50000, get the project name, and the name of the manager of the department in charge of the project.
 
 SELECT p.pname, p.pdept.mgr.ename Manager_name
 FROM Proj p
 WHERE p.budget > 50000
 /
 
--- (e) For departments that are in charge of projects, find the department number, department name and total budget of all its projects together.
+-- (e) FOR departments that are in charge of projects, find the department NUMBER, department name and total budget of all its projects together.
 
-SELECT p.pdept.dno dept_number, p.pdept.dname dept_name, SUM(p.budget) Total_budget
+SELECT p.pdept.dno dept_NUMBER, p.pdept.dname dept_name, SUM(p.budget) Total_budget
 FROM Proj p
 GROUP BY p.pdept.dno, p.pdept.dname
 /
@@ -144,7 +141,7 @@ WHERE p.budget >= (
 		  )
 /
 
--- (g) Find the managers who control budget above $60,000. (Hint: The total amount a manager control is the sum of budgets of all projects belonging to the dept(s) for which the he/she is managing). Print the manager’s employee number and the total controlling budget.
+-- (g) Find the managers who control budget above $60,000. (Hint: The total amount a manager control is the sum of budgets of all projects belonging to the dept(s) fOR which the he/she is managing). Print the manager’s employee NUMBER and the total controlling budget.
 
 SELECT p.pdept.mgr.eno manager_no, SUM(p.budget) total_budget
 FROM Proj p
@@ -152,15 +149,15 @@ GROUP BY p.pdept.mgr.eno
 HAVING SUM(p.budget) > 60000
 /
 
--- (h) Find the manager who controls the largest amount. Print the manager’s employee number and the total controlling budget.
+-- (h) Find the manager who controls the largest amount. Print the manager’s employee NUMBER and the total controlling budget.
 
-SELECT p.pdept.mgr.eno manager_number, SUM(p.budget) total_budget
+SELECT p.pdept.mgr.eno manager_NUMBER, SUM(p.budget) total_budget
 FROM Proj p
 GROUP BY p.pdept.mgr.eno
 HAVING SUM(p.budget) >= (
 			  SELECT MAX(total)
 			  FROM (
-				SELECT SUM(p1.budget) as total
+				SELECT SUM(p1.budget) AS total
 				FROM Proj p1
 				GROUP BY p1.pdept.mgr.eno 
 				)
@@ -170,17 +167,20 @@ HAVING SUM(p.budget) >= (
 /*
 * Drop tables and types
 */
+-- Drop constraint
+ALTER TABLE Dept DROP CONSTRAINT fk_mgr
+/
 -- Drop tables
-drop table Emp force
+DROP TABLE Emp FORCE
 /
-drop table Dept force
+DROP TABLE Dept FORCE
 /
-drop table Proj force
+DROP TABLE Proj FORCE
 /
 -- Drop types
-drop type emp_t force
+DROP TYPE emp_t FORCE
 /
-drop type dept_t force
+DROP TYPE dept_t FORCE
 /
-drop type proj_t force
+DROP TYPE proj_t FORCE
 /
