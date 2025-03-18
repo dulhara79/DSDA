@@ -333,26 +333,68 @@ END;
 /
 
 -- c). Create a PL/SQL block to increase salary of employees in the department 50 using WHERE CURRENT OF clause. 
+-- PL/SQL Block to Increase Salaries in Department 50
+DECLARE
+    CURSOR emp_cursor IS
+        SELECT e.emp_id, e.salary
+        FROM Employee e
+        WHERE e.deptid = 50
+        FOR UPDATE OF e.salary NOWAIT; -- Lock rows for update
+    salary_increase NUMBER := 500; -- Increase amount
+BEGIN
+    FOR emp_rec IN emp_cursor LOOP
+        UPDATE Employee
+        SET salary = emp_rec.salary + salary_increase
+        WHERE CURRENT OF emp_cursor;
+    END LOOP;
+    COMMIT; -- Commit the changes
+END;
+/
 
 -- d). Write a program in PL/SQL to create a cursor displays the name and salary of each employee in the EMPLOYEES table whose salary is less than that specified by a passed in parameter value. 
+-- PL/SQL Block to Display Employees with Salary < Parameter
+CREATE OR REPLACE PROCEDURE DisplayLowSalaryEmployees (
+    p_max_salary IN NUMBER
+) IS
+    CURSOR emp_cursor (max_salary NUMBER) IS
+        SELECT e.name, e.salary
+        FROM Employee e
+        WHERE e.salary < max_salary;
+BEGIN
+    FOR emp_rec IN emp_cursor(p_max_salary) LOOP
+        DBMS_OUTPUT.PUT_LINE(
+            'Employee: ' || emp_rec.name || 
+            ' | Salary: ' || emp_rec.salary
+        );
+    END LOOP;
+END DisplayLowSalaryEmployees;
+/
+
+BEGIN
+    DisplayLowSalaryEmployees(5000);
+END;
+/
 
 
--- Drop tables
-DROP TABLE Student_courses
-/
-DROP TABLE Courses
-/
-DROP TABLE Customer
-/
-DROP TABLE Employee
-/
+/**
+* DROPPING TALBLES TYPES TRIGGERS AND PROCEDURES
+*/
+-- 1. Drop Triggers
+DROP TRIGGER ModifyCustomer;
 
--- Drop types
-DROP TYPE student_courses_t
-/
-DROP TYPE course_t
-/
-DROP TYPE cust_t
-/
-DROP TYPE emp_t
-/
+-- 2. Drop Procedures/Functions
+DROP PROCEDURE UpdateCourse;
+DROP PROCEDURE GetEmployeeDetails;
+DROP PROCEDURE DisplayLowSalaryEmployees;
+
+-- 3. Drop Tables (dependent on types and REFs)
+DROP TABLE Student_courses;
+DROP TABLE Courses;
+DROP TABLE Customer;
+DROP TABLE Employee;
+
+-- 4. Drop Types (child types first)
+DROP TYPE student_courses_t;
+DROP TYPE course_t;
+DROP TYPE cust_t;
+DROP TYPE emp_t;
