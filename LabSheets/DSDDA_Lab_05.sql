@@ -59,6 +59,7 @@ CREATE TABLE Courses OF course_t (
 
 CREATE TABLE Student_courses OF student_courses_t (
     enrollment_id PRIMARY KEY,
+    course_number REFERENCES cource_t,
     enrollment_date DEFAULT SYSDATE
 )
 /
@@ -221,6 +222,12 @@ EXCEPTION
 END UpdateCourse;
 /
 
+-- TEST
+BEGIN
+    UpdateCourse('Math');
+END;
+/
+
 -- Exercise 02
 -- Write a trigger for the customers table that would fire for INSERT or UPDATE or DELETE operations performed on the CUSTOMER table. Trigger should display the salary difference between the old values and new values
 CREATE TRIGGER ModifyCustomer 
@@ -295,9 +302,35 @@ END;
 /
 
 -- b). Write a PL/SQL block to display the employee ID, first name, job title and the start date of present job.
-CREATE PROCEDURE GetEmployeeDetails() 
+CREATE PROCEDURE GetEmployeeDetails
 IS
+    CURSOR emp_cur IS
+        SELECT e.emp_id, e.name, e.jobid, e.hire_date
+        FROM Employee e;
+    emp_rec emp_cur%ROWTYPE;
+BEGIN
+    IF NOT emp_cur%ISOPEN THEN
+        OPEN emp_cur;
+    END IF;
 
+    LOOP
+        FETCH emp_cur INTO emp_rec;
+        EXIT WHEN emp_cur%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Employee ID: ' || emp_rec.emp_id
+        || ' | Employee name: ' || emp_rec.name 
+        || ' | Job ID: ' || emp_rec.jobid
+        || ' ! Employee Hire Date: ' || emp_rec.hire_date);
+    END LOOP;
+
+        CLOSE emp_cur;
+END GetEmployeeDetails;
+/
+
+-- TEST
+BEGIN
+    GetEmployeeDetails();
+END;
+/
 
 -- c). Create a PL/SQL block to increase salary of employees in the department 50 using WHERE CURRENT OF clause. 
 
