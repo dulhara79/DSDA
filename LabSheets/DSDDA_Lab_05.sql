@@ -379,21 +379,21 @@ END;
 /**
 * DROPPING TALBLES TYPES TRIGGERS AND PROCEDURES
 */
--- 1. Drop Triggers
+-- Drop Triggers
 DROP TRIGGER ModifyCustomer;
 
--- 2. Drop Procedures/Functions
+-- Drop Procedures/Functions
 DROP PROCEDURE UpdateCourse;
 DROP PROCEDURE GetEmployeeDetails;
 DROP PROCEDURE DisplayLowSalaryEmployees;
 
--- 3. Drop Tables (dependent on types and REFs)
+-- Drop Tables (dependent on types and REFs)
 DROP TABLE Student_courses;
 DROP TABLE Courses;
 DROP TABLE Customer;
 DROP TABLE Employee;
 
--- 4. Drop Types (child types first)
+-- Drop Types (child types first)
 DROP TYPE student_courses_t;
 DROP TYPE course_t;
 DROP TYPE cust_t;
