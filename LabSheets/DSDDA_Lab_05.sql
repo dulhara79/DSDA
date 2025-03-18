@@ -88,6 +88,8 @@ INSERT INTO Employee VALUES (108, 'Sara', 'SWILL', TO_DATE('1998-12-05', 'YYYY-M
 /
 INSERT INTO Employee VALUES (109, 'Tom', 'TCRUISE', TO_DATE('1989-07-19', 'YYYY-MM-DD'), '515.123.5555', 'ST_CLERK', 3500, 0, 104, 100)
 /
+INSERT INTO Employee VALUES (110, 'Tom', 'TCRUISE', TO_DATE('2020-07-19', 'YYYY-MM-DD'), '515.123.5555', 'ST_CLERK', 3500, 0, 104, 100)
+/
 
 -- Customer Table
 INSERT INTO Customer VALUES (1, 'Louvis', 23, 'Italy', 50000)
@@ -219,8 +221,87 @@ EXCEPTION
 END UpdateCourse;
 /
 
+-- Exercise 02
+-- Write a trigger for the customers table that would fire for INSERT or UPDATE or DELETE operations performed on the CUSTOMER table. Trigger should display the salary difference between the old values and new values
+CREATE TRIGGER ModifyCustomer 
+BEFORE 
+INSERT OR UPDATE OR DELETE 
+OF salary
+ON Customer
+REFERENCING OLD AS o NEW AS n
+FOR EACH ROW
+DECLARE
+    OLD_VAL NUMBER;
+    NEW_VAL NUMBER;
+BEGIN
+    IF INSERTING THEN
+        OLD_VAL := 0;
+        NEW_VAL := :n.salary;
+    ELSIF UPDATING THEN
+        OLD_VAL := :o.salary;
+        NEW_VAL := :n.salary;
+    ELSIF DELETING THEN
+        OLD_VAL := :o.salary;
+        NEW_VAL := 0;
+    ELSE
+        OLD_VAL := :o.salary;
+        NEW_VAL := :n.salary;
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('OLD VALUE: ' || OLD_VAL || ' | NEW VALUE: ' || NEW_VAL);
+END;
+/
+
+-- Testing
+-- Test INSERT
+INSERT INTO Customer VALUES (11, 'Alice', 30, '123 Street', 50000)
+/
+-- Test UPDATE
+UPDATE Customer SET salary = 60000 WHERE id = 11
+/
+-- Test DELETE
+DELETE FROM Customer WHERE id = 11
+/
+
+-- Exercise 03
+-- a).Write a PL/SQL program to display the name of the employee and increment percentage of salary according to their working experiences.
+DECLARE
+    CURSOR emp_cur IS   
+        SELECT e.name, e.hire_date, e.salary
+        FROM Employee e;
+    emp_rec emp_cur%ROWTYPE;
+
+    prct NUMBER;
+    experience NUMBER;
+BEGIN
+    FOR emp_rec IN emp_cur LOOP
+        experience := MONTHS_BETWEEN(SYSDATE, emp_rec.hire_date) / 12;
+
+        IF (experience > 20) THEN
+            prct := 0.15;
+        ELSIF (experience > 15) THEN
+            prct := 0.1;
+        ELSIF (experience > 10) THEN
+            prct := 0.05;
+        ELSIF (experience > 5) THEN
+            prct := 0.025;
+        ELSE
+            prct := 0;
+        END IF;
+
+        DBMS_OUTPUT.PUT_LINE('Employee name: ' || EMP_REC.name || ' | Years of Experience: ' || ROUND(experience, 1) || ' | Increment precentage: ' || prct * 100 || '%');
+    END LOOP;
+END;
+/
+
+-- b). Write a PL/SQL block to display the employee ID, first name, job title and the start date of present job.
+CREATE PROCEDURE GetEmployeeDetails() 
+IS
 
 
+-- c). Create a PL/SQL block to increase salary of employees in the department 50 using WHERE CURRENT OF clause. 
+
+-- d). Write a program in PL/SQL to create a cursor displays the name and salary of each employee in the EMPLOYEES table whose salary is less than that specified by a passed in parameter value. 
 
 
 -- Drop tables
