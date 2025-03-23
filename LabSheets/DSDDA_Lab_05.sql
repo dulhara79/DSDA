@@ -339,7 +339,7 @@ DECLARE
         SELECT e.emp_id, e.salary
         FROM Employee e
         WHERE e.deptid = 50
-        FOR UPDATE OF e.salary NOWAIT; -- Lock rows for update
+        FOR UPDATE OF e.salary;
     salary_increase NUMBER := 500; -- Increase amount
 BEGIN
     FOR emp_rec IN emp_cursor LOOP
@@ -347,7 +347,6 @@ BEGIN
         SET salary = emp_rec.salary + salary_increase
         WHERE CURRENT OF emp_cursor;
     END LOOP;
-    COMMIT; -- Commit the changes
 END;
 /
 
