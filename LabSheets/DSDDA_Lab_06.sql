@@ -1,7 +1,13 @@
+/*
+* 1. Create a table named AdminDocs with two columns: id and xDoc. The xDoc column should be of type XML.
+*    Insert two XML documents into the table. The first document should contain a catalog of products, and the second document should contain a list of sections in a document.
+*/
 CREATE TABLE AdminDocs (
 id int primary key,
 xDoc Xml not null
-)INSERT INTO AdminDocs VALUES (1,
+)
+
+INSERT INTO AdminDocs VALUES (1,
 '<catalog>
 	<product dept="WMN">
 		 <number>557</number>
@@ -22,7 +28,9 @@ xDoc Xml not null
 		 <colorChoices>white gray</colorChoices>
 		 <desc>Our <i>favorite</i> shirt!</desc>
 	 </product>
-</catalog>')INSERT INTO AdminDocs VALUES (2,
+</catalog>')
+
+INSERT INTO AdminDocs VALUES (2,
 '<doc id="123">
 	<sections>
 		<section num="1">
@@ -35,7 +43,13 @@ xDoc Xml not null
 			<title>Features</title>
 		</section>
 	</sections>
-</doc>')select *
+</doc>')
+
+/**
+* 2. Query the XML documents in the AdminDocs table using the following XPath expressions:
+*    - Select all products in the catalog.
+*/
+select *
 from AdminDocs
 
 -- 2. Practice the following XPath expressions
@@ -83,49 +97,49 @@ where id=1
 
 -- 3. Practice the following XQuery expressions.
 SELECT xDoc.query(' for $prod in //product
-let $x:=$prod/number
-return $x')
+										let $x:=$prod/number
+										return $x')
 FROM AdminDocs
 where id=1
 
 SELECT xDoc.query(' for $prod in //product
-let $x:=$prod/number
-where $x>500
-return $x')
+										let $x:=$prod/number
+										where $x>500
+										return $x')
 FROM AdminDocs
 where id=1
 
 SELECT xDoc.query(' for $prod in //product
-let $x:=$prod/number
-return $x')
+										let $x:=$prod/number
+										return $x')
 FROM AdminDocs
 where id=1
 
 SELECT xDoc.query(' for $prod in //product
-let $x:=$prod/number
-where $x>500
-return (<Item>{$x}</Item>)')
+										let $x:=$prod/number
+										where $x>500
+										return (<Item>{$x}</Item>)')
 FROM AdminDocs
 where id=1
 
 SELECT xDoc.query(' for $prod in //product[number > 500]
-let $x:=$prod/number
-return (<Item>{$x}</Item>)')
+										let $x:=$prod/number
+										return (<Item>{$x}</Item>)')
 FROM AdminDocs
 where id=1
 
 SELECT xDoc.query(' for $prod in //product
-let $x:=$prod/number
-where $x>500
-return (<Item>{data($x)}</Item>)')
+										let $x:=$prod/number
+										where $x>500
+										return (<Item>{data($x)}</Item>)')
 FROM AdminDocs
 where id=1
 
 SELECT xDoc.query(' for $prod in //product
-let $x:=$prod/number
-return if ($x>500)
-then <book>{data($x)}</book>
-else <paper>{data($x)}</paper>')
+										let $x:=$prod/number
+										return if ($x>500)
+										then <book>{data($x)}</book>
+										else <paper>{data($x)}</paper>')
 FROM AdminDocs
 where id=1
 
@@ -144,4 +158,7 @@ UPDATE AdminDocs SET xDoc.modify('
  delete
  //section[@num="2"]')
 
+/**
+* Delete the XML instance
+*/
  drop table AdminDocs
